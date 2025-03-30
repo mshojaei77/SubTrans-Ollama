@@ -92,8 +92,6 @@ def translate_subtitles(subtitles: List[Dict], model: str,
     for batch_start in range(0, len(subtitles), batch_size):
         batch_end = min(batch_start + batch_size, len(subtitles))
         
-        batch_progress = st.progress(0.0, text=f"Processing batch {batch_start//batch_size + 1}...")
-        
         # Track context for this batch
         context_history = []
         
@@ -141,10 +139,6 @@ def translate_subtitles(subtitles: List[Dict], model: str,
             {translated_text}
             ```
             """)
-            
-            # Update batch progress
-            batch_progress.progress((idx - batch_start + 1) / (batch_end - batch_start), 
-                                   text=f"Processing batch {batch_start//batch_size + 1}: {idx - batch_start + 1}/{batch_end - batch_start}")
             
             # Update overall progress
             if progress_bar:
@@ -200,6 +194,9 @@ def main():
         
         st.markdown("### Advanced Settings")
         with st.expander("Advanced Options", expanded=False):
+            # Add GPU warning message
+            st.warning("⚠️ **Low-End GPU Warning**: If you have a low-end GPU or integrated graphics, please reduce the Processing Speed (batch size) and increase the Cooling Time to prevent crashes or overheating.")
+            
             context_size = st.slider(
                 "Context Awareness",
                 min_value=1,
@@ -365,21 +362,6 @@ def main():
                     mime="text/plain",
                     use_container_width=True
                 )
-                
-                # Show sample of translation
-                st.markdown("### Translation Sample")
-                sample_container = st.container()
-                with sample_container:
-                    sample_size = min(3, len(translated_subtitles))
-                    cols = st.columns(sample_size)
-                    
-                    for i in range(sample_size):
-                        with cols[i]:
-                            st.text_area(
-                                f"Sample {i+1}",
-                                f"Original:\n{subtitles[i]['text']}\n\nPersian:\n{translated_subtitles[i]['text']}",
-                                height=150
-                            )
                 
                 # Cleanup temporary files
                 os.unlink(temp_path)
