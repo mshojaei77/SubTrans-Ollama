@@ -1,4 +1,4 @@
-# 🎬 SubTrans-Ollama (Subtitle Translator)
+# 🎬 SubTrans-Ollama 
 
 A simple tool that translates movie subtitles (.srt files) to Persian using AI
 
@@ -78,11 +78,14 @@ cd SubTrans-Ollama
    - Type: `streamlit run app.py`
    - Your web browser will automatically open with the app
 
-3. Using the app (with pictures):
+3. Using the app:
    - Upload your subtitle file by clicking "Browse files"
    - Choose your settings (or leave as default)
    - Click "Translate Subtitles" and wait for it to finish
    - Click "Download Translated SRT" to save your Persian subtitles
+
+![image](https://github.com/user-attachments/assets/c8873ba5-43d1-4a04-988c-f6c9b2f82914)
+
 
 ## What the Settings Mean (Made Simple)
 
