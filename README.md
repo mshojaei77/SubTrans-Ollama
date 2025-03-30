@@ -1,4 +1,4 @@
-# 🎬 SubTrans-Ollama (Subtitle Translator)
+# 🎬 SubTrans-Ollama 
 
 A simple tool that translates movie subtitles (.srt files) to Persian using AI
 
