@@ -1,9 +1,11 @@
 import asyncio
 import json
 import uuid
+import httpx
 from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from src.config import get_settings
 from src.api.schemas import TranslationRequest
 from src.jobs.database import JobDatabase
 from src.subtitle_engine import SubtitleDocument, SUPPORTED_EXTENSIONS
@@ -11,9 +13,39 @@ from src.translation.engine import SubtitleTranslator
 from src.providers import OllamaProvider, LMStudioProvider, OpenAICompatibleProvider
 
 app = FastAPI(title="Subtitle Translation API")
+settings = get_settings()
 UPLOADS = Path("data/uploads")
 UPLOADS.mkdir(parents=True, exist_ok=True)
 jobs = JobDatabase()
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "version": "0.1.0", "database": "ok", "upload_directory": "ok", "output_directory": "ok"}
+
+
+@app.get("/providers")
+def providers():
+    return {"providers": [
+        {"id": "ollama", "label": "Ollama", "default_base_url": "http://localhost:11434", "requires_api_key": False},
+        {"id": "lmstudio", "label": "LM Studio", "default_base_url": "http://localhost:1234/v1", "requires_api_key": False},
+        {"id": "openai-compatible", "label": "OpenAI-compatible", "default_base_url": "", "requires_api_key": True},
+    ]}
+
+
+@app.post("/providers/test")
+def test_provider(request: dict):
+    provider = str(request.get("provider", "")).lower()
+    base_url = str(request.get("base_url", "")).rstrip("/")
+    try:
+        url = f"{base_url}/api/tags" if provider == "ollama" else f"{base_url}/models"
+        response = httpx.get(url, headers={"Authorization": f"Bearer {request.get('api_key', '')}"}, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        models = [item.get("name", item.get("id")) for item in data.get("models", data.get("data", []))]
+        return {"connected": True, "models": models, "message": "Provider connection succeeded."}
+    except Exception:
+        return {"connected": False, "models": [], "message": "Provider is unavailable or rejected the request."}
 
 
 def _provider(request):
@@ -68,6 +100,30 @@ def cancel(job_id: str):
         raise HTTPException(404, "Job not found")
     jobs.set_status(job_id, "cancelled")
     return {"job_id": job_id, "status": "cancelled"}
+
+
+@app.post("/jobs/{job_id}/resume")
+def resume(job_id: str):
+    job = jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job["status"] not in {"cancelled", "failed"}:
+        raise HTTPException(409, "Job is not resumable")
+    jobs.set_status(job_id, "pending")
+    return status(job_id)
+
+
+@app.get("/jobs/{job_id}/download")
+def download(job_id: str):
+    job = jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job["status"] != "completed":
+        raise HTTPException(409, "Output is not ready")
+    path = Path(job["output_file"]).resolve()
+    if not path.exists():
+        raise HTTPException(404, "Output file not found")
+    return FileResponse(path, filename=path.name, media_type="text/plain")
 
 
 @app.get("/jobs/{job_id}/stream")

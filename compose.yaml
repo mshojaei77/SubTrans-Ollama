@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    volumes: ["subtitle-data:/app/data"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  ui:
+    build: .
+    command: ["uv", "run", "streamlit", "run", "app.py", "--server.address=0.0.0.0"]
+    ports: ["8501:8501"]
+    environment: {SUBTITLE_API_BASE_URL: "http://api:8000"}
+    depends_on:
+      api: {condition: service_healthy}
+volumes:
+  subtitle-data:

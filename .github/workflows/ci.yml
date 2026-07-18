@@ -1,0 +1,14 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install uv
+      - run: uv sync --frozen
+      - run: uv run python -m compileall -q src
+      - run: uv run python api_check.py
+      - run: uv run python structure_check.py
