@@ -34,6 +34,7 @@ if not discovery.get("available"):
 provider = discovery["provider"]
 base_url = discovery["base_url"]
 model = discovery["model"]
+available_models = discovery.get("models", [model])
 
 with st.form("easy_translation_form"):
     uploaded = st.file_uploader(
@@ -41,11 +42,12 @@ with st.form("easy_translation_form"):
         type=["srt", "ass", "ssa", "vtt", "lrc"],
         help="Supported files: SRT, ASS, SSA, VTT, and LRC.",
     )
-    st.write(f"AI model: **{model}**")
+    model = st.selectbox("AI model", available_models, index=0, help="These are the models already installed in your local AI engine.")
 
     with st.expander("Advanced settings (optional)"):
         base_url = st.text_input("Provider address", base_url)
         api_key = st.text_input("API key (only needed for online services)", type="password")
+        custom_model = st.text_input("Use a model name not shown above (optional)", "")
         batch_size = st.slider("Processing batch size", 1, 100, 20)
         max_workers = st.slider("Parallel workers", 1, 8, 1)
         quality_mode = st.selectbox("Quality checking", ["disabled", "standard", "strict"], index=1)
@@ -54,6 +56,7 @@ with st.form("easy_translation_form"):
     submitted = st.form_submit_button("🚀 Translate subtitles", type="primary", disabled=uploaded is None, use_container_width=True)
 
 if submitted and uploaded:
+    model = custom_model.strip() or model
     request = json.dumps({
         "source_language": "auto", "target_language": "fa", "provider": provider,
         "model": model, "base_url": base_url, "api_key": api_key,
