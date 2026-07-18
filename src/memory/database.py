@@ -23,10 +23,17 @@ class MemoryDatabase:
         return sqlite3.connect(self.path)
 
     def get_exact(self, text, source_lang, target_lang):
-        with self._connect() as db:
+        db = self._connect()
+        try:
             row = db.execute("SELECT translated_text FROM translations WHERE hash=? AND source_lang=? AND target_lang=?", (text_hash(text), source_lang, target_lang)).fetchone()
+        finally:
+            db.close()
         return row[0] if row else None
 
     def put(self, source, translation, source_lang, target_lang):
-        with self._connect() as db:
+        db = self._connect()
+        try:
             db.execute("INSERT OR REPLACE INTO translations(source_text, translated_text, source_lang, target_lang, created_at, hash) VALUES (?, ?, ?, ?, ?, ?)", (source, translation, source_lang, target_lang, datetime.now(timezone.utc).isoformat(), text_hash(source)))
+            db.commit()
+        finally:
+            db.close()
