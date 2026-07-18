@@ -21,12 +21,13 @@ Subtitle Translator is a privacy-friendly, beginner-friendly desktop app powered
 
 ## Quick start for Windows
 
-1. Download **Subtitle Translator.exe** from [Releases](https://github.com/mshojaei77/SubTrans-Ollama/releases).
-2. Install one local AI engine: [Ollama](#ollama-setup) or [LM Studio](#lm-studio-setup).
-3. Double-click **Subtitle Translator.exe**.
-4. Drop your subtitle file into the window.
-5. Choose the source and target languages.
-6. Click **Translate**, then download the finished subtitle.
+1. Download [**Subtitle-Translator-Windows-x64.zip**](https://github.com/mshojaei77/SubTrans-Ollama/releases/download/v0.1.0/Subtitle-Translator-Windows-x64.zip) from the latest release.
+2. Extract the ZIP file. The app does not need an installer.
+3. Install one local AI engine: [Ollama](#ollama-setup) or [LM Studio](#lm-studio-setup).
+4. Double-click **Subtitle Translator.exe**.
+5. Drop your subtitle file into the window.
+6. Choose the source and target languages.
+7. Click **Translate**, then download the finished subtitle.
 
 No PowerShell, API configuration, Docker, or Python knowledge is required.
 
@@ -139,7 +140,7 @@ If Subtitle Translator saves you time, please **⭐ star the repository** and sh
 - **More language pairs:** expand beyond the current Persian-focused workflow.
 - **Speaker profiles:** preserve different voices for characters, narration, and technical dialogue.
 - **Improved subtitle line breaking:** make translated lines easier to read on screen.
-- **Translation quality reports:** show a simple summary of terminology and quality checks.
+- **Whisper-based transcription:** add speech-to-text workflows for videos without subtitles.
 - **Batch folders:** translate a whole season or folder while keeping filenames organized.
 - **Drag-and-drop desktop packaging:** make installation and updates even easier for Windows users.
 - **Community glossary packs:** share terminology for anime, games, films, and technical subjects.
