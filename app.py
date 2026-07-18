@@ -7,6 +7,7 @@ from ollama import chat
 from openai import OpenAI
 import subprocess  # Add this import
 from typing import List, Dict, Tuple
+from src.providers import OllamaProvider, OpenAICompatibleProvider, LMStudioProvider
 
 
 st.set_page_config(page_title="SRT Translator", page_icon="🎬", layout="wide")
@@ -62,12 +63,12 @@ def translate_to_persian(text: str, model: str, previous_context=None,
         })
         
         if provider == "Ollama":
-            response = chat(model=model, messages=messages)
-            content = response.message.content
+            backend = OllamaProvider(model)
+        elif provider == "LM Studio":
+            backend = LMStudioProvider(model=model, base_url=base_url)
         else:
-            client = OpenAI(base_url=base_url.rstrip('/'), api_key=api_key or "not-needed")
-            response = client.chat.completions.create(model=model, messages=messages, temperature=0.2)
-            content = response.choices[0].message.content
+            backend = OpenAICompatibleProvider(model=model, base_url=base_url, api_key=api_key)
+        content = backend.chat(messages, temperature=0.2)
         if not content:
             raise RuntimeError("Provider returned an empty translation")
         return content.strip()
@@ -188,10 +189,11 @@ def main():
     with st.sidebar:
         st.title("⚙️ Settings")
 
-        provider = st.selectbox("Provider", ["OpenAI-compatible", "Ollama"],
+        provider = st.selectbox("Provider", ["Ollama", "LM Studio", "OpenAI-compatible"],
                                 help="Use any server implementing /v1/chat/completions (LM Studio, OpenRouter, llama.cpp, Jina, etc.).")
-        if provider == "OpenAI-compatible":
-            base_url = st.text_input("API base URL", "http://localhost:1234/v1")
+        if provider != "Ollama":
+            default_url = "http://localhost:1234/v1" if provider == "LM Studio" else "https://api.openai.com/v1"
+            base_url = st.text_input("API base URL", default_url)
             api_key = st.text_input("API key (optional for local servers)", type="password")
             model_options = ["local-model", "gpt-4o-mini", "openrouter/auto"]
         else:
