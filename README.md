@@ -1,157 +1,85 @@
-# 🎬 SubTrans-Ollama 
+# Subtitle Translator
 
-## Windows
+Translate movie and TV subtitles to Persian on your own computer.
 
-Download **Subtitle Translator.exe**, double-click it, drop in your subtitle, choose a language, and click **Translate**. No PowerShell, API, or Docker knowledge is needed.
+You do not need to know Python, APIs, or Docker.
 
-## Simplest way to use it
+## Windows: the easiest way
 
-1. Install and start [Ollama](https://ollama.com/) and download a translation model.
-2. Start the app:
+1. Download **Subtitle Translator.exe** from the Releases page.
+2. Install [Ollama](https://ollama.com/download) and leave it running.
+3. Double-click **Subtitle Translator.exe**.
+4. Drop your subtitle file into the window.
+5. Choose the language and click **Translate**.
+6. Download the translated subtitle when it is ready.
 
-   ```powershell
-   uv sync
-   uvicorn src.api.main:app
-   ```
+Your subtitle files and translations stay on your computer when you use Ollama.
 
-3. In another window run:
+## First-time Ollama setup
 
-   ```powershell
-   streamlit run app.py
-   ```
+After installing Ollama, download one translation model. The app automatically finds models already installed on your computer.
 
-4. Upload your subtitle, keep the recommended settings, and click **Translate subtitles**. Advanced settings are optional.
+If you are comfortable using a terminal, this command downloads a small model:
 
-A simple tool that translates movie subtitles (.srt files) to Persian using AI
-
-
-
-## What This App Does
-
-This app helps you translate subtitle files from any language to Persian. All you need to do is upload your subtitle file, click a button, and download the translated version!
-
-![image](https://github.com/user-attachments/assets/cd64df5e-e622-4671-8336-fb1b64707b15)
-
-## Before You Start: What You'll Need
-
-1. **A Computer** with Windows, Mac, or Linux
-2. **Python** (version 3.12 or newer) installed on your computer
-3. **Ollama** - a free AI tool that runs on your computer
-4. **Internet Connection** to download the necessary files
-
-
-## Easy Installation Guide
-
-### Provider support
-
-In the sidebar, choose `OpenAI-compatible` to connect to any server exposing `/v1/chat/completions` (for example LM Studio, OpenRouter, llama.cpp, or Jina). Enter its base URL, optional API key, and model ID. Ollama remains available as a local provider.
-
-### Step 1: Install Python
-
-If you don't already have Python installed:
-
-1. Go to [Python.org](https://www.python.org/downloads/)
-2. Click the big "Download Python" button
-3. Run the installer and make sure to check "Add Python to PATH" during installation
-
-### Step 2: Install Ollama
-
-Ollama is the AI engine that powers the translations:
-
-1. Visit [Ollama.ai/download](https://ollama.ai/download)
-2. Download the version for your computer (Windows, Mac, or Linux)
-3. Install it by following the on-screen instructions
-4. Once installed, Ollama will run in the background (you'll see its icon in your system tray or menu bar)
-
-### Step 3: Get the Subtitle Translator App
-
-**Option A: Direct Download (Easiest)**
-1. Click the green "Code" button at the top of this page
-2. Select "Download ZIP"
-3. Unzip the downloaded file to a folder on your computer
-
-**Option B: Using Command Line**
-```bash
-git clone https://github.com/mshojaei77/SubTrans-Ollama.git
-cd SubTrans-Ollama
+```text
+ollama pull gemma3:4b
 ```
 
-### Step 4: Install the App
+You can also use LM Studio. Open LM Studio, load a model, start its local server, and then open Subtitle Translator.
 
-1. Open your computer's command prompt or terminal
-   - On Windows: Press Win+R, type "cmd" and press Enter
-   - On Mac: Open the Terminal app from Applications > Utilities
-2. Navigate to the folder where you saved the app:
-   ```
-   cd path/to/SubTrans-Ollama
-   ```
-3. Install the required components:
-   ```
-   pip install -r requirements.txt
-   ```
+## Subtitle files supported
 
-## How to Use the App
+- `.srt`
+- `.ass`
+- `.ssa`
+- `.vtt`
+- `.lrc`
 
-![image](https://github.com/user-attachments/assets/75d32c9a-c33d-45c0-b640-2ee47e89c127)
+Subtitle timing, numbering, and ASS/SSA styling are preserved while the spoken text is translated.
 
-1. Start Ollama if it's not already running
-   - On Windows: Find Ollama in your Start menu
-   - On Mac: Find Ollama in your Applications folder
+## If no AI engine is found
 
-2. Start the translation app:
-   - Open your command prompt/terminal
-   - Navigate to the app folder
-   - Type: `streamlit run app.py`
-   - Your web browser will automatically open with the app
+The app will show a simple setup message. Either:
 
-3. Using the app:
-   - Upload your subtitle file by clicking "Browse files"
-   - Choose your settings (or leave as default)
-   - Click "Translate Subtitles" and wait for it to finish
-   - Click "Download Translated SRT" to save your Persian subtitles
+- open Ollama and install at least one model, or
+- open LM Studio, load a model, and start its local server.
 
-![image](https://github.com/user-attachments/assets/c8873ba5-43d1-4a04-988c-f6c9b2f82914)
+Then click **Check again**.
 
+## If translation stops
 
-## What the Settings Mean (Made Simple)
+Your completed progress is saved. Click **Continue translation** to resume instead of starting over.
 
-- **Ollama Model**: Which AI to use for translation. The default option is best for most users.
-- **Context Window Size**: How many surrounding subtitles the AI looks at. Larger number = better translations but slower.
-- **Batch Size**: How many subtitles to translate at once. Larger number = faster but uses more computer power.
-- **Delay Between Batches**: How long to wait between groups of translations. Helps prevent your computer from getting too hot.
+## Common questions
 
-## Troubleshooting: Common Problems and Solutions
+### Can I choose another model?
 
-### "I can't install Python"
-- Make sure you have administrator access on your computer.
-- Try downloading Python from the Microsoft Store if you're on Windows 10 or 11.
+Yes. The app lists models installed in Ollama or LM Studio. You can select one from the AI model list, or enter a custom model name in Advanced settings.
 
-### "Ollama isn't working"
-- Make sure Ollama is running (check for its icon in your system tray).
-- Restart your computer and try again.
-- For Mac users: You might need to right-click the app and select "Open" the first time.
-- ensure no proxy is running on your computer in 127.0.0.1:11434 (this is the default port for ollama)
+### Is an internet connection required?
 
-### "I see errors when running the app"
-- Make sure you installed all requirements: `pip install -r requirements.txt`
-- Try restarting Ollama.
-- Check that you're using Python 3.12 or newer: type `python --version` in your terminal.
+Only to download Ollama, models, or the application. Translation itself can run offline with a local model.
 
-### "The translations aren't good"
-- Try increasing the "Context Window Size" to 5 or higher.
-- Make sure you're using the recommended model (mshojaei77/gemma3persian).
+### Why is translation slow?
 
-### "The translation is very slow, or my computer is overheating / using too much CPU"
-- Reduce the "Batch Size". A smaller batch size uses less processing power at once.
-- Increase the "Delay Between Batches". This gives your computer more time to cool down between processing chunks of subtitles.
-- Consider using a lighter model like gemma3:1b instead of gemma3persian for faster processing, though translations may be less accurate.
-- If you have a dedicated GPU, ensure Ollama is configured to use it. Consult the Ollama documentation for GPU configuration.
-- Close other applications that may be using significant CPU or GPU resources.
+Local AI speed depends on your computer and model size. A smaller model is faster; closing other heavy applications can also help.
 
-## Need More Help?
+### Can I translate languages other than Persian?
 
-- Create an "Issue" on this GitHub page
+The current interface is optimized for Persian translation. Language options may be expanded in future releases.
+
+### Are translations perfect?
+
+No. AI translations can make mistakes, especially with jokes, names, accents, and ambiguous dialogue. The app preserves subtitle structure but cannot guarantee perfect wording.
+
+## Developers
+
+Technical setup, API usage, Docker, and local development instructions are in [docs/development.md](docs/development.md), [docs/api.md](docs/api.md), and [docs/architecture.md](docs/architecture.md).
+
+## Privacy
+
+With Ollama or LM Studio, subtitles are processed by the local model on your computer. If you configure an online OpenAI-compatible service, that service receives the text required for translation; check its privacy policy first.
 
 ## License
 
-MIT License - Free to use for everyone!
+MIT License.
