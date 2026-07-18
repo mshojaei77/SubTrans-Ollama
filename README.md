@@ -17,19 +17,15 @@ Subtitle Translator is a privacy-friendly, beginner-friendly desktop app powered
 - **Multiple AI engines:** automatically discover Ollama or LM Studio models.
 - **Subtitle-safe:** timestamps, numbering, ordering, and ASS/SSA styling are preserved.
 - **Reliable for long files:** context, glossary, translation memory, quality checks, parallel workers, and resume checkpoints are built in.
-- **No technical setup for users:** Windows users can launch the packaged app with one double-click.
+- **Local web interface:** use it in your browser without a cloud account.
 
-## Quick start for Windows
+## Quick start: local web app
 
-1. Download [**Subtitle-Translator-Windows-x64.zip**](https://github.com/mshojaei77/SubTrans-Ollama/releases/download/v0.1.0/Subtitle-Translator-Windows-x64.zip) from the latest release.
-2. Extract the ZIP file. The app does not need an installer.
-3. Install one local AI engine: [Ollama](#ollama-setup) or [LM Studio](#lm-studio-setup).
-4. Double-click **Subtitle Translator.exe**.
-5. Drop your subtitle file into the window.
-6. Choose the source and target languages.
-7. Click **Translate**, then download the finished subtitle.
-
-No PowerShell, API configuration, Docker, or Python knowledge is required.
+1. Install one local AI engine: [Ollama](#ollama-setup) or [LM Studio](#lm-studio-setup).
+2. Install dependencies with `uv sync`.
+3. Start the service with `uvicorn src.api.main:app`.
+4. In another terminal, run `streamlit run app.py`.
+5. Open the local address shown in your browser, drop in a subtitle, and click **Translate**.
 
 ## Ollama setup
 
@@ -142,7 +138,7 @@ If Subtitle Translator saves you time, please **⭐ star the repository** and sh
 - **Improved subtitle line breaking:** make translated lines easier to read on screen.
 - **Whisper-based transcription:** add speech-to-text workflows for videos without subtitles.
 - **Batch folders:** translate a whole season or folder while keeping filenames organized.
-- **Drag-and-drop desktop packaging:** make installation and updates even easier for Windows users.
+- **Simpler local setup:** reduce the number of commands needed to start the browser app.
 - **Community glossary packs:** share terminology for anime, games, films, and technical subjects.
 - **Optional cloud providers:** support remote OpenAI-compatible services for users without a local GPU.
 
