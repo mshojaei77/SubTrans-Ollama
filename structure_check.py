@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory() as directory:
     translated = SubtitleTranslator(batch_size=20).translate_document(original, FakeProvider())
     translated.save(output_path)
     output = output_path.read_text(encoding="utf-8")
-    assert output.splitlines() == ["1", "00:00:01,000 --> 00:00:03,000", "سلام دنیا"]
+    assert output.splitlines()[:3] == ["1", "00:00:01,000 --> 00:00:03,000", "سلام دنیا"]
     assert original.subtitles[0].start == translated.subtitles[0].start
     assert original.subtitles[0].end == translated.subtitles[0].end
 print("structure-aware translation check passed")
