@@ -115,6 +115,38 @@ Bug reports, improvements, translations, and documentation updates are welcome. 
 
 If Subtitle Translator saves you time, please **⭐ star the repository** and share it with someone who works with subtitles.
 
+## Roadmap
+
+### Available now
+
+- One-click Windows launcher.
+- Ollama and LM Studio model discovery.
+- OpenAI-compatible provider support.
+- SRT, ASS, SSA, VTT, and LRC parsing.
+- Structure-safe translation that preserves subtitle timing and styling.
+- Context-aware translation for more natural dialogue.
+- Glossary and terminology consistency.
+- Translation memory to avoid repeated work.
+- Quality review and correction loop.
+- Parallel workers for faster processing.
+- Checkpoints, cancellation, and resume.
+- API-backed progress and completed-file download.
+
+### Next planned improvements
+
+- **Automatic model download:** offer a one-click download for the recommended Gemma 4 model.
+- **Better hardware guidance:** suggest Gemma 4 E2B, E4B, 12B, 26B A4B, or 31B based on available GPU memory.
+- **More language pairs:** expand beyond the current Persian-focused workflow.
+- **Speaker profiles:** preserve different voices for characters, narration, and technical dialogue.
+- **Improved subtitle line breaking:** make translated lines easier to read on screen.
+- **Translation quality reports:** show a simple summary of terminology and quality checks.
+- **Batch folders:** translate a whole season or folder while keeping filenames organized.
+- **Drag-and-drop desktop packaging:** make installation and updates even easier for Windows users.
+- **Community glossary packs:** share terminology for anime, games, films, and technical subjects.
+- **Optional cloud providers:** support remote OpenAI-compatible services for users without a local GPU.
+
+Roadmap priorities may change based on user feedback. [Open an issue](https://github.com/mshojaei77/SubTrans-Ollama/issues) to suggest or discuss an improvement.
+
 ## License
 
 MIT License.
