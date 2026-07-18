@@ -1,86 +1,119 @@
-# Subtitle Translator
+# 🎬 Subtitle Translator — Local AI Subtitle Translation
 
-Translate movie and TV subtitles to Persian on your own computer.
+**Translate SRT, ASS, SSA, VTT, and LRC subtitles to Persian with local AI.**
 
-You do not need to know Python, APIs, or Docker.
+Subtitle Translator is a privacy-friendly, beginner-friendly desktop app powered by **Ollama**, **LM Studio**, and other OpenAI-compatible local AI servers. Drop in a subtitle file, choose a model, and download the translated result.
 
-## Windows: the easiest way
+[![GitHub stars](https://img.shields.io/github/stars/mshojaei77/SubTrans-Ollama?style=for-the-badge)](https://github.com/mshojaei77/SubTrans-Ollama/stargazers)
+[![GitHub release](https://img.shields.io/github/v/release/mshojaei77/SubTrans-Ollama?style=for-the-badge)](https://github.com/mshojaei77/SubTrans-Ollama/releases)
+[![License](https://img.shields.io/github/license/mshojaei77/SubTrans-Ollama?style=for-the-badge)](LICENSE)
 
-1. Download **Subtitle Translator.exe** from the Releases page.
-2. Install [Ollama](https://ollama.com/download) and leave it running.
+⭐ **Like the project? Star the repository to help other subtitle fans find it!**
+
+## Why use it?
+
+- **Local and private:** with Ollama or LM Studio, subtitle text stays on your computer.
+- **Simple workflow:** upload → translate → download.
+- **Multiple AI engines:** automatically discover Ollama or LM Studio models.
+- **Subtitle-safe:** timestamps, numbering, ordering, and ASS/SSA styling are preserved.
+- **Reliable for long files:** context, glossary, translation memory, quality checks, parallel workers, and resume checkpoints are built in.
+- **No technical setup for users:** Windows users can launch the packaged app with one double-click.
+
+## Quick start for Windows
+
+1. Download **Subtitle Translator.exe** from [Releases](https://github.com/mshojaei77/SubTrans-Ollama/releases).
+2. Install one local AI engine: [Ollama](#ollama-setup) or [LM Studio](#lm-studio-setup).
 3. Double-click **Subtitle Translator.exe**.
 4. Drop your subtitle file into the window.
-5. Choose the language and click **Translate**.
-6. Download the translated subtitle when it is ready.
+5. Choose the source and target languages.
+6. Click **Translate**, then download the finished subtitle.
 
-Your subtitle files and translations stay on your computer when you use Ollama.
+No PowerShell, API configuration, Docker, or Python knowledge is required.
 
-## First-time Ollama setup
+## Ollama setup
 
-After installing Ollama, download the recommended **Gemma 4 E2B** model. The app automatically finds models already installed on your computer and selects it when available.
+1. Install [Ollama](https://ollama.com/download).
+2. Leave Ollama running in the background.
+3. Download a Gemma 4 model. The recommended starting point is **Gemma 4 E2B**:
 
-If you are comfortable using a terminal, this command downloads a small model:
+   ```text
+   ollama pull google/gemma-4-E2B
+   ```
 
-```text
-ollama pull google/gemma-4-E2B
-```
+4. Open Subtitle Translator. It detects Ollama and lists your installed models automatically.
 
-Gemma 4 E2B is the default recommendation for everyday computers. If your computer has a stronger GPU, consider a larger Gemma 4 model such as **E4B**, **12B**, **26B A4B**, or **31B**. Larger models can produce better results but need more memory and run more slowly. See the [Gemma 4 model page](https://huggingface.co/google/gemma-4-E2B) for model details.
+For a stronger GPU, try a larger Gemma 4 model such as **E4B**, **12B**, **26B A4B**, or **31B**. Larger models may improve quality but require more memory. See the [Gemma 4 model card](https://huggingface.co/google/gemma-4-E2B).
 
-You can also use LM Studio. Open LM Studio, load a model, start its local server, and then open Subtitle Translator.
+## LM Studio setup
 
-## Subtitle files supported
+LM Studio is a friendly alternative to Ollama with a graphical model manager.
 
-- `.srt`
-- `.ass`
-- `.ssa`
-- `.vtt`
-- `.lrc`
+1. Download [LM Studio](https://lmstudio.ai/).
+2. Open LM Studio and search for a Gemma 4 model.
+3. Download a model that fits your computer.
+4. Open the **Developer** or **Local Server** tab.
+5. Load the model and start the local server.
+6. Leave LM Studio open, then start Subtitle Translator.
 
-Subtitle timing, numbering, and ASS/SSA styling are preserved while the spoken text is translated.
+The app automatically checks LM Studio at `http://localhost:1234/v1` when Ollama is unavailable. It lists the loaded model so you can select it without copying model IDs or editing configuration files.
 
-## If no AI engine is found
+## Supported subtitle formats
 
-The app will show a simple setup message. Either:
+| Format | Typical use |
+| --- | --- |
+| `.srt` | Movies, TV, and streaming subtitles |
+| `.ass` / `.ssa` | Styled anime and advanced subtitles |
+| `.vtt` | Web video and browser captions |
+| `.lrc` | Timed lyrics |
 
-- open Ollama and install at least one model, or
-- open LM Studio, load a model, and start its local server.
+The translator changes subtitle text while preserving timing and supported style metadata. AI output is not guaranteed to be perfect, especially for slang, jokes, names, and ambiguous dialogue.
 
-Then click **Check again**.
+## What happens during translation?
 
-## If translation stops
+1. The subtitle file is validated and parsed.
+2. Nearby lines provide context for pronouns and references.
+3. Glossary terms keep names and terminology consistent.
+4. Previously translated lines are reused when safe.
+5. The model returns text only; subtitle structure is protected.
+6. Quality checks and checkpoints make long translations safer.
+7. The translated file is ready to download.
+
+## Need help?
+
+### “AI engine not found”
+
+Open Ollama or LM Studio, make sure a model is installed/loaded, and click **Check again**.
+
+### “Model not found”
+
+Install the model in Ollama or load it in LM Studio. The app only lists models that the selected engine can currently see.
+
+### Translation is slow
+
+Use a smaller model, close other GPU-heavy applications, or reduce the optional batch settings in **Advanced settings**.
+
+### Translation stopped
 
 Your completed progress is saved. Click **Continue translation** to resume instead of starting over.
 
-## Common questions
-
-### Can I choose another model?
-
-Yes. The app lists models installed in Ollama or LM Studio. You can select one from the AI model list, or enter a custom model name in Advanced settings.
-
-### Is an internet connection required?
-
-Only to download Ollama, models, or the application. Translation itself can run offline with a local model.
-
-### Why is translation slow?
-
-Local AI speed depends on your computer and model size. A smaller model is faster; closing other heavy applications can also help.
-
-### Can I translate languages other than Persian?
-
-The current interface is optimized for Persian translation. Language options may be expanded in future releases.
-
-### Are translations perfect?
-
-No. AI translations can make mistakes, especially with jokes, names, accents, and ambiguous dialogue. The app preserves subtitle structure but cannot guarantee perfect wording.
-
 ## Developers
 
-Technical setup, API usage, Docker, and local development instructions are in [docs/development.md](docs/development.md), [docs/api.md](docs/api.md), and [docs/architecture.md](docs/architecture.md).
+Technical setup and architecture documentation:
+
+- [Development guide](docs/development.md)
+- [API reference](docs/api.md)
+- [Architecture](docs/architecture.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## Privacy
 
-With Ollama or LM Studio, subtitles are processed by the local model on your computer. If you configure an online OpenAI-compatible service, that service receives the text required for translation; check its privacy policy first.
+When using Ollama or LM Studio, translation runs locally. If you configure an online OpenAI-compatible provider, subtitle text is sent to that provider; review its privacy policy before use.
+
+## Contributing
+
+Bug reports, improvements, translations, and documentation updates are welcome. Open an issue or pull request on GitHub.
+
+If Subtitle Translator saves you time, please **⭐ star the repository** and share it with someone who works with subtitles.
 
 ## License
 
