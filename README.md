@@ -1,5 +1,23 @@
 # 🎬 SubTrans-Ollama 
 
+## Simplest way to use it
+
+1. Install and start [Ollama](https://ollama.com/) and download a translation model.
+2. Start the app:
+
+   ```powershell
+   uv sync
+   uvicorn src.api.main:app
+   ```
+
+3. In another window run:
+
+   ```powershell
+   streamlit run app.py
+   ```
+
+4. Upload your subtitle, keep the recommended settings, and click **Translate subtitles**. Advanced settings are optional.
+
 A simple tool that translates movie subtitles (.srt files) to Persian using AI
 
 
