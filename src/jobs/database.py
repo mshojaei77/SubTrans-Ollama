@@ -48,3 +48,12 @@ class JobDatabase:
             db.commit()
         finally:
             db.close()
+
+    def get(self, job_id):
+        db = sqlite3.connect(self.path)
+        db.row_factory = sqlite3.Row
+        try:
+            row = db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+            return dict(row) if row else None
+        finally:
+            db.close()

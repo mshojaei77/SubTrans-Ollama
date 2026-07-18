@@ -10,6 +10,9 @@ dependencies = [
     "ollama>=0.1.5",
     "openai>=1.0.0",
     "pysubs2>=1.8.1",
+    "fastapi>=0.139.2",
+    "uvicorn>=0.51.0",
+    "python-multipart>=0.0.32",
 ]
 
 [project.urls]
