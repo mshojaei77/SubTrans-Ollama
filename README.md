@@ -20,6 +20,10 @@ This app helps you translate subtitle files from any language to Persian. All yo
 
 ## Easy Installation Guide
 
+### Provider support
+
+In the sidebar, choose `OpenAI-compatible` to connect to any server exposing `/v1/chat/completions` (for example LM Studio, OpenRouter, llama.cpp, or Jina). Enter its base URL, optional API key, and model ID. Ollama remains available as a local provider.
+
 ### Step 1: Install Python
 
 If you don't already have Python installed:
