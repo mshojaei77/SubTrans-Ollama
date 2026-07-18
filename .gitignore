@@ -12,3 +12,4 @@ wheels/
 data/*.db
 data/uploads/
 data/outputs/
+data/jobs.db
