@@ -15,8 +15,11 @@ class TranslationMemory:
             return exact
         if not text.strip():
             return None
-        with self.database._connect() as db:
+        db = self.database._connect()
+        try:
             rows = db.execute("SELECT source_text, translated_text FROM translations WHERE source_lang=? AND target_lang=?", (self.source_lang, self.target_lang)).fetchall()
+        finally:
+            db.close()
         normalized = text.strip().lower()
         for source, translation in rows:
             if SequenceMatcher(None, normalized, source.strip().lower()).ratio() >= self.similarity_threshold and all(target in translation for target in (glossary_targets or [])):
