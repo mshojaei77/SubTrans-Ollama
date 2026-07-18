@@ -8,6 +8,7 @@ class FakeProvider:
     def chat(self, messages, temperature=0.2):
         import json
         items = json.loads(messages[-1]["content"].split("\n", 1)[1])
+        assert items[0]["context"]["current"] == "Hello world"
         return json.dumps([{"id": item["id"], "translation": "سلام دنیا"} for item in items], ensure_ascii=False)
 
 

@@ -1,9 +1,3 @@
-from dataclasses import dataclass
+from src.translation.models import TranslationUnit
 
-
-@dataclass
-class TranslationUnit:
-    id: int
-    source: str
-    translated: str | None = None
-    context: dict | None = None
+__all__ = ["TranslationUnit"]

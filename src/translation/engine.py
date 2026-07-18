@@ -1,18 +1,27 @@
 from copy import deepcopy
-from src.subtitles.models import TranslationUnit
+from src.translation.models import TranslationUnit
+from src.translation.context import ContextBuilder
 from src.translation.prompts import batch_messages
 from src.translation.validator import validate_translations
 
 
 class SubtitleTranslator:
-    def __init__(self, batch_size: int = 20, max_retries: int = 2):
+    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3):
         if batch_size < 1:
             raise ValueError("batch_size must be positive")
         self.batch_size = batch_size
         self.max_retries = max_retries
+        if context_mode not in {"none", "window"}:
+            raise ValueError("context_mode must be 'none' or 'window'")
+        self.context_mode = context_mode
+        self.context_builder = ContextBuilder(context_window)
 
     def extract_units(self, document) -> list[TranslationUnit]:
-        return [TranslationUnit(id=i, source=line.text) for i, line in enumerate(document.subtitles)]
+        return [TranslationUnit(
+            id=i,
+            text=line.text,
+            context=self.context_builder.build(document.subtitles, i) if self.context_mode == "window" else None,
+        ) for i, line in enumerate(document.subtitles)]
 
     def _translate_batch(self, units, provider):
         last_error = None
