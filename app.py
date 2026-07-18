@@ -16,13 +16,13 @@ def parse_srt(file_path: str) -> List[Dict]:
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # Split by double newline to get individual subtitle blocks
-    subtitle_blocks = re.split(r'\n\n+', content.strip())
+    content = content.replace('\r\n', '\n').replace('\r', '\n').strip()
+    subtitle_blocks = re.split(r'\n[ \t]*\n+', content)
     subtitles = []
     
     for block in subtitle_blocks:
         lines = block.strip().split('\n')
-        if len(lines) >= 3:  # Valid subtitle has at least 3 lines
+        if len(lines) >= 3 and re.fullmatch(r'\d+', lines[0]) and re.search(r'\d{2}:\d{2}:\d{2},\d{3}\s+-->\s+\d{2}:\d{2}:\d{2},\d{3}', lines[1]):
             subtitle_id = lines[0]
             timestamp = lines[1]
             text = '\n'.join(lines[2:])
@@ -63,7 +63,7 @@ def translate_to_persian(text: str, model: str, previous_context=None) -> str:
         return response.message.content.strip()
     except Exception as e:
         st.error(f"Translation error: {e}")
-        return text  # Return original text if translation fails
+        raise RuntimeError(f"Translation failed for subtitle: {e}") from e
 
 # 3. Create overlapping chunks for better context
 def create_context_chunks(subtitles: List[Dict], window_size: int = 3) -> List[Tuple[List[Dict], int]]:
@@ -83,7 +83,7 @@ def translate_subtitles(subtitles: List[Dict], model: str,
                         context_size: int = 3, batch_size: int = 10, 
                         delay: float = 0.5, progress_bar=None) -> List[Dict]:
     """Translate subtitles while maintaining translation context in model memory."""
-    translated_subtitles = subtitles.copy()
+    translated_subtitles = [dict(subtitle) for subtitle in subtitles]
     
     # Create a placeholder for the real-time preview
     preview_container = st.empty()
@@ -102,21 +102,11 @@ def translate_subtitles(subtitles: List[Dict], model: str,
             # Prepare context from previous subtitles (limited by context_size)
             previous_context = []
             
-            # First use context from previous batch if needed
-            if idx == batch_start and batch_start > 0:
-                # Add context from the end of the previous batch
-                for j in range(max(0, batch_start - context_size), batch_start):
-                    previous_context.append({
-                        "original": subtitles[j]['text'],
-                        "translated": translated_subtitles[j]['text']
-                    })
-            else:
-                # Use context from the current batch
-                for j in range(max(batch_start, idx - context_size), idx):
-                    previous_context.append({
-                        "original": subtitles[j]['text'],
-                        "translated": translated_subtitles[j]['text']
-                    })
+            for j in range(max(0, idx - context_size), idx):
+                previous_context.append({
+                    "original": subtitles[j]['text'],
+                    "translated": translated_subtitles[j]['text']
+                })
             
             # Translate with context
             translated_text = translate_to_persian(current_subtitle, model, previous_context)
@@ -171,8 +161,11 @@ def ensure_ollama_running():
     """Run 'ollama list' to verify Ollama is running."""
     try:
         # Run the ollama list command
-        subprocess.run(["ollama", "list"], check=False, capture_output=False)
-        st.success("Ollama is running correctly.")
+        result = subprocess.run(["ollama", "list"], check=False, capture_output=True, text=True)
+        if result.returncode == 0:
+            st.success("Ollama is running correctly.")
+        else:
+            st.error("Ollama is not responding properly.")
     except subprocess.CalledProcessError:
         st.error("Failed to run 'ollama list'. Ollama is not responding properly.")
     except FileNotFoundError:
@@ -259,8 +252,11 @@ def main():
     ollama_status = st.empty()
     
     try:
-        subprocess.run(["ollama", "list"], check=False, capture_output=True)
-        ollama_status.success("✅ Ollama is running correctly")
+        result = subprocess.run(["ollama", "list"], check=False, capture_output=True, text=True)
+        if result.returncode == 0:
+            ollama_status.success("Ollama is running correctly")
+        else:
+            raise RuntimeError(result.stderr.strip() or "ollama list failed")
     except Exception as e:
         ollama_status.error("❌ Ollama is not running. Please start Ollama before continuing.")
         st.info("Don't have Ollama? [Click here to download and install](https://ollama.ai/)")
@@ -316,7 +312,7 @@ def main():
                 parsing_status.success(f"✅ Found {len(subtitles)} subtitles")
                 
                 # Create output file path
-                output_path = temp_path.replace('.srt', '.fa.srt')
+                output_path = os.path.splitext(temp_path)[0] + '.fa.srt'
                 
                 # Show translation status
                 st.markdown("### Step 3: Translation in progress")
@@ -348,7 +344,8 @@ def main():
                 
                 # Determine original filename without path
                 original_name = uploaded_file.name
-                output_name = original_name.replace('.srt', '.fa.srt')
+                stem, extension = os.path.splitext(original_name)
+                output_name = f"{stem}.fa{extension or '.srt'}"
                 
                 # Step 4: Download results
                 st.markdown("### Step 4: Download your translated subtitles")
@@ -364,8 +361,10 @@ def main():
                 )
                 
                 # Cleanup temporary files
-                os.unlink(temp_path)
-                os.unlink(output_path)
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+                if os.path.exists(output_path):
+                    os.unlink(output_path)
                 
             except Exception as e:
                 st.error(f"Something went wrong: {str(e)}")
@@ -373,6 +372,8 @@ def main():
                 # Clean up temp file
                 if os.path.exists(temp_path):
                     os.unlink(temp_path)
+                if 'output_path' in locals() and os.path.exists(output_path):
+                    os.unlink(output_path)
     else:
         # Show helpful message when no file is uploaded
         st.info("👆 Upload your subtitle file to get started")
