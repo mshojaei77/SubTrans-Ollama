@@ -12,12 +12,16 @@ class MemoryDatabase:
     def __init__(self, path: str | Path = "data/translation_memory.db"):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as db:
+        db = self._connect()
+        try:
             db.execute("""CREATE TABLE IF NOT EXISTS translations (
                 id INTEGER PRIMARY KEY, source_text TEXT NOT NULL,
                 translated_text TEXT NOT NULL, source_lang TEXT NOT NULL,
                 target_lang TEXT NOT NULL, created_at TEXT NOT NULL,
                 hash TEXT NOT NULL, UNIQUE(hash, source_lang, target_lang))""")
+            db.commit()
+        finally:
+            db.close()
 
     def _connect(self):
         return sqlite3.connect(self.path)
