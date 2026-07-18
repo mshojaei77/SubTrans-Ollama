@@ -6,6 +6,7 @@ from src.translation.validator import validate_glossary
 from src.memory.service import TranslationMemory
 from src.evaluation.judge import TranslationJudge
 from src.evaluation.database import EvaluationDatabase
+from src.jobs.database import JobDatabase
 from src.translation.prompts import batch_messages
 from src.translation.validator import validate_translations
 
@@ -53,14 +54,25 @@ class SubtitleTranslator:
             return result
         raise ValueError(f"Unable to validate translation for subtitle {units[0].id}: {last_error}")
 
-    def translate_document(self, document, provider):
+    def translate_document(self, document, provider, job_id=None, source_file="", output_file="", job_database=None):
         units = self.extract_units(document)
         translations = {}
+        checkpoints = {}
+        jobs = job_database or (JobDatabase() if job_id else None)
+        if jobs and job_id:
+            if not jobs.checkpoints(job_id):
+                jobs.create(job_id, source_file, output_file, len(units))
+            checkpoints = jobs.checkpoints(job_id)
+            translations.update(checkpoints)
         pending = []
         for unit in units:
+            if unit.id in checkpoints:
+                continue
             cached = self.memory.lookup(unit.text, [entry.target for entry in (unit.glossary or [])]) if self.memory else None
             if cached is not None:
                 translations[unit.id] = cached
+                if jobs and job_id:
+                    jobs.save_checkpoint(job_id, unit.id, cached)
             else:
                 pending.append(unit)
         for start in range(0, len(pending), self.batch_size):
@@ -80,6 +92,11 @@ class SubtitleTranslator:
             if self.memory:
                 for unit in batch:
                     self.memory.save(unit.text, result[unit.id])
+            if jobs and job_id:
+                for unit in batch:
+                    jobs.save_checkpoint(job_id, unit.id, result[unit.id])
+        if jobs and job_id:
+            jobs.set_status(job_id, "completed")
         result = deepcopy(document)
         for unit, line in zip(units, result.subtitles):
             line.text = translations[unit.id]
