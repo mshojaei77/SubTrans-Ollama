@@ -1,12 +1,14 @@
 from copy import deepcopy
 from src.translation.models import TranslationUnit
 from src.translation.context import ContextBuilder
+from src.glossary.service import GlossaryService
+from src.translation.validator import validate_glossary
 from src.translation.prompts import batch_messages
 from src.translation.validator import validate_translations
 
 
 class SubtitleTranslator:
-    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3):
+    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3, glossary_path=None, glossary=None):
         if batch_size < 1:
             raise ValueError("batch_size must be positive")
         self.batch_size = batch_size
@@ -15,12 +17,14 @@ class SubtitleTranslator:
             raise ValueError("context_mode must be 'none' or 'window'")
         self.context_mode = context_mode
         self.context_builder = ContextBuilder(context_window)
+        self.glossary = glossary or GlossaryService(path=glossary_path) if glossary_path else (glossary or GlossaryService())
 
     def extract_units(self, document) -> list[TranslationUnit]:
         return [TranslationUnit(
             id=i,
             text=line.text,
             context=self.context_builder.build(document.subtitles, i) if self.context_mode == "window" else None,
+            glossary=self.glossary.find_terms(line.text),
         ) for i, line in enumerate(document.subtitles)]
 
     def _translate_batch(self, units, provider):
@@ -28,7 +32,9 @@ class SubtitleTranslator:
         for _ in range(self.max_retries + 1):
             try:
                 raw = provider.chat(batch_messages(units), temperature=0.2)
-                return validate_translations(raw, [unit.id for unit in units])
+                result = validate_translations(raw, [unit.id for unit in units])
+                validate_glossary(result, {unit.id: [entry.target for entry in (unit.glossary or [])] for unit in units})
+                return result
             except (ValueError, TypeError) as exc:
                 last_error = exc
         if len(units) > 1:
