@@ -4,6 +4,7 @@ import time
 import tempfile
 import streamlit as st
 from ollama import chat
+from openai import OpenAI
 import subprocess  # Add this import
 from typing import List, Dict, Tuple
 
@@ -36,7 +37,9 @@ def parse_srt(file_path: str) -> List[Dict]:
     return subtitles
 
 # 2. Translate text using Ollama
-def translate_to_persian(text: str, model: str, previous_context=None) -> str:
+def translate_to_persian(text: str, model: str, previous_context=None,
+                         provider: str = "OpenAI-compatible", base_url: str = "http://localhost:1234/v1",
+                         api_key: str = "") -> str:
     """Translate text to Persian using Ollama with previous context."""
     try:
         # Create the base messages with system prompt
@@ -58,9 +61,16 @@ def translate_to_persian(text: str, model: str, previous_context=None) -> str:
             'content': f'translate this subtitle to Persian: "{text}"',
         })
         
-        response = chat(model=model, messages=messages)
-        
-        return response.message.content.strip()
+        if provider == "Ollama":
+            response = chat(model=model, messages=messages)
+            content = response.message.content
+        else:
+            client = OpenAI(base_url=base_url.rstrip('/'), api_key=api_key or "not-needed")
+            response = client.chat.completions.create(model=model, messages=messages, temperature=0.2)
+            content = response.choices[0].message.content
+        if not content:
+            raise RuntimeError("Provider returned an empty translation")
+        return content.strip()
     except Exception as e:
         st.error(f"Translation error: {e}")
         raise RuntimeError(f"Translation failed for subtitle: {e}") from e
@@ -81,7 +91,8 @@ def create_context_chunks(subtitles: List[Dict], window_size: int = 3) -> List[T
 # 4. Translate subtitles with context and batching
 def translate_subtitles(subtitles: List[Dict], model: str, 
                         context_size: int = 3, batch_size: int = 10, 
-                        delay: float = 0.5, progress_bar=None) -> List[Dict]:
+                        delay: float = 0.5, progress_bar=None, provider: str = "OpenAI-compatible",
+                        base_url: str = "http://localhost:1234/v1", api_key: str = "") -> List[Dict]:
     """Translate subtitles while maintaining translation context in model memory."""
     translated_subtitles = [dict(subtitle) for subtitle in subtitles]
     
@@ -109,7 +120,7 @@ def translate_subtitles(subtitles: List[Dict], model: str,
                 })
             
             # Translate with context
-            translated_text = translate_to_persian(current_subtitle, model, previous_context)
+            translated_text = translate_to_persian(current_subtitle, model, previous_context, provider, base_url, api_key)
             
             # Store the translation
             translated_subtitles[idx]['text'] = translated_text
@@ -176,11 +187,21 @@ def main():
     # Create sidebar for configuration
     with st.sidebar:
         st.title("⚙️ Settings")
+
+        provider = st.selectbox("Provider", ["OpenAI-compatible", "Ollama"],
+                                help="Use any server implementing /v1/chat/completions (LM Studio, OpenRouter, llama.cpp, Jina, etc.).")
+        if provider == "OpenAI-compatible":
+            base_url = st.text_input("API base URL", "http://localhost:1234/v1")
+            api_key = st.text_input("API key (optional for local servers)", type="password")
+            model_options = ["local-model", "gpt-4o-mini", "openrouter/auto"]
+        else:
+            base_url, api_key = "", ""
+            model_options = ["mshojaei77/gemma3persian", "gemma3:1b", "gemma3:4b", "llama3.2:1b", "qwen2:0.5b"]
         
         st.markdown("### Translation Model")
         model = st.selectbox(
             "Choose a language model",
-            ["mshojaei77/gemma3persian", "gemma3:1b", "gemma3:4b", "llama3.2:1b" , "qwen2:0.5b"],
+            model_options,
             index=0,
             help="The AI model that will translate your subtitles"
         )
@@ -251,15 +272,17 @@ def main():
     # Check Ollama status
     ollama_status = st.empty()
     
-    try:
-        result = subprocess.run(["ollama", "list"], check=False, capture_output=True, text=True)
-        if result.returncode == 0:
-            ollama_status.success("Ollama is running correctly")
-        else:
-            raise RuntimeError(result.stderr.strip() or "ollama list failed")
-    except Exception as e:
-        ollama_status.error("❌ Ollama is not running. Please start Ollama before continuing.")
-        st.info("Don't have Ollama? [Click here to download and install](https://ollama.ai/)")
+    if provider == "Ollama":
+        try:
+            result = subprocess.run(["ollama", "list"], check=False, capture_output=True, text=True)
+            if result.returncode == 0:
+                ollama_status.success("Ollama is running correctly")
+            else:
+                raise RuntimeError(result.stderr.strip() or "ollama list failed")
+        except Exception:
+            ollama_status.error("Ollama is not running. Please start Ollama before continuing.")
+    else:
+        ollama_status.info(f"Using OpenAI-compatible endpoint: {base_url}")
     
     # Step 1: File Upload
     st.markdown("### Step 1: Upload your subtitle file")
@@ -331,7 +354,10 @@ def main():
                         context_size=context_size, 
                         batch_size=batch_size,
                         delay=delay,
-                        progress_bar=progress_bar
+                        progress_bar=progress_bar,
+                        provider=provider,
+                        base_url=base_url,
+                        api_key=api_key
                     )
                 
                 # Write output file

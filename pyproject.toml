@@ -8,6 +8,7 @@ license = {text = "MIT"}
 dependencies = [
     "streamlit>=1.22.0",
     "ollama>=0.1.5",
+    "openai>=1.0.0",
 ]
 
 [project.urls]
