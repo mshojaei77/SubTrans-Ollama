@@ -7,12 +7,15 @@ from src.memory.service import TranslationMemory
 from src.evaluation.judge import TranslationJudge
 from src.evaluation.database import EvaluationDatabase
 from src.jobs.database import JobDatabase
+from src.translation.config import TranslationConfig
+from src.translation.workers import TranslationWorker
+import asyncio
 from src.translation.prompts import batch_messages
 from src.translation.validator import validate_translations
 
 
 class SubtitleTranslator:
-    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3, glossary_path=None, glossary=None, memory=None, memory_path=None, judge=None, quality_mode: str = "disabled", evaluation_path=None):
+    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3, glossary_path=None, glossary=None, memory=None, memory_path=None, judge=None, quality_mode: str = "disabled", evaluation_path=None, max_workers: int = 1):
         if batch_size < 1:
             raise ValueError("batch_size must be positive")
         self.batch_size = batch_size
@@ -28,6 +31,9 @@ class SubtitleTranslator:
         self.quality_mode = quality_mode
         self.judge = judge
         self.evaluations = EvaluationDatabase(evaluation_path) if evaluation_path else None
+        if max_workers < 1:
+            raise ValueError("max_workers must be positive")
+        self.max_workers = max_workers
 
     def extract_units(self, document) -> list[TranslationUnit]:
         return [TranslationUnit(
@@ -75,9 +81,18 @@ class SubtitleTranslator:
                     jobs.save_checkpoint(job_id, unit.id, cached)
             else:
                 pending.append(unit)
-        for start in range(0, len(pending), self.batch_size):
-            batch = pending[start:start + self.batch_size]
-            result = self._translate_batch(batch, provider)
+        batches = [pending[start:start + self.batch_size] for start in range(0, len(pending), self.batch_size)]
+        if self.max_workers > 1 and batches:
+            async def run_batches():
+                semaphore = asyncio.Semaphore(self.max_workers)
+                worker = TranslationWorker(self, provider, semaphore)
+                return await asyncio.gather(*(worker.translate(batch) for batch in batches), return_exceptions=True)
+            batch_results = asyncio.run(run_batches())
+        else:
+            batch_results = [self._translate_batch(batch, provider) for batch in batches]
+        for batch, result in zip(batches, batch_results):
+            if isinstance(result, Exception):
+                raise result
             if self.judge and self.quality_mode != "disabled":
                 for unit in batch:
                     score = self.judge.evaluate(unit.text, result[unit.id], glossary=[e.target for e in (unit.glossary or [])])
