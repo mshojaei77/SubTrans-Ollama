@@ -26,7 +26,8 @@ if not discovery.get("available"):
     st.warning("AI engine not found")
     st.write("Subtitle Translator needs Ollama or LM Studio running on this computer.")
     with st.expander("How to set it up"):
-        st.markdown("**Ollama:** Install Ollama, download a model, and leave it running.\n\n**LM Studio:** Open LM Studio, load a model, start its local server, then click **Check again**.")
+        recommended = discovery.get("recommended_model", "google/gemma-4-E2B")
+        st.markdown(f"**Recommended model:** `{recommended}`\n\n**Ollama:** Install Ollama, download the recommended model, and leave it running.\n\n**LM Studio:** Open LM Studio, load a model, start its local server, then click **Check again**.")
     if st.button("Check again"):
         st.rerun()
     st.stop()
@@ -35,6 +36,8 @@ provider = discovery["provider"]
 base_url = discovery["base_url"]
 model = discovery["model"]
 available_models = discovery.get("models", [model])
+preferred = "google/gemma-4-E2B"
+available_models = sorted(available_models, key=lambda name: 0 if name == preferred else 1)
 
 with st.form("easy_translation_form"):
     uploaded = st.file_uploader(

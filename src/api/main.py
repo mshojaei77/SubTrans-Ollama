@@ -47,7 +47,7 @@ def discover_providers():
                 return {"available": True, "provider": provider, "base_url": base_url, "model": models[0], "models": models}
         except Exception:
             continue
-    return {"available": False, "message": "AI engine not found"}
+    return {"available": False, "recommended_model": "google/gemma-4-E2B", "message": "AI engine not found"}
 
 
 @app.post("/providers/test")

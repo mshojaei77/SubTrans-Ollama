@@ -17,13 +17,15 @@ Your subtitle files and translations stay on your computer when you use Ollama.
 
 ## First-time Ollama setup
 
-After installing Ollama, download one translation model. The app automatically finds models already installed on your computer.
+After installing Ollama, download the recommended **Gemma 4 E2B** model. The app automatically finds models already installed on your computer and selects it when available.
 
 If you are comfortable using a terminal, this command downloads a small model:
 
 ```text
-ollama pull gemma3:4b
+ollama pull google/gemma-4-E2B
 ```
+
+Gemma 4 E2B is the default recommendation for everyday computers. If your computer has a stronger GPU, consider a larger Gemma 4 model such as **E4B**, **12B**, **26B A4B**, or **31B**. Larger models can produce better results but need more memory and run more slowly. See the [Gemma 4 model page](https://huggingface.co/google/gemma-4-E2B) for model details.
 
 You can also use LM Studio. Open LM Studio, load a model, start its local server, and then open Subtitle Translator.
 
