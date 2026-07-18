@@ -17,12 +17,23 @@ st.title("🎬 Easy Subtitle Translator")
 st.caption("Translate your subtitles with a few clicks. Your files stay on your computer.")
 
 try:
-    client.health()
+    discovery = client.discover()
 except SubtitleAPIError:
-    st.error("The translator is not ready yet.")
-    st.info("Ask the person who installed this app to start the translator service, then refresh this page.")
-    st.code("uvicorn src.api.main:app --reload", language="powershell")
+    st.error("The translator is still starting. Please try again in a moment.")
     st.stop()
+
+if not discovery.get("available"):
+    st.warning("AI engine not found")
+    st.write("Subtitle Translator needs Ollama or LM Studio running on this computer.")
+    with st.expander("How to set it up"):
+        st.markdown("**Ollama:** Install Ollama, download a model, and leave it running.\n\n**LM Studio:** Open LM Studio, load a model, start its local server, then click **Check again**.")
+    if st.button("Check again"):
+        st.rerun()
+    st.stop()
+
+provider = discovery["provider"]
+base_url = discovery["base_url"]
+model = discovery["model"]
 
 with st.form("easy_translation_form"):
     uploaded = st.file_uploader(
@@ -30,11 +41,10 @@ with st.form("easy_translation_form"):
         type=["srt", "ass", "ssa", "vtt", "lrc"],
         help="Supported files: SRT, ASS, SSA, VTT, and LRC.",
     )
-    provider_label = st.selectbox("2. Choose where to translate", ["Ollama (recommended, runs locally)", "LM Studio", "Other OpenAI-compatible server"])
-    model = st.text_input("3. Model name", "mshojaei77/gemma3persian", help="Leave the default unless you installed a different model.")
+    st.write(f"AI model: **{model}**")
 
     with st.expander("Advanced settings (optional)"):
-        base_url = st.text_input("Provider address", "http://localhost:11434" if provider_label.startswith("Ollama") else "http://localhost:1234/v1")
+        base_url = st.text_input("Provider address", base_url)
         api_key = st.text_input("API key (only needed for online services)", type="password")
         batch_size = st.slider("Processing batch size", 1, 100, 20)
         max_workers = st.slider("Parallel workers", 1, 8, 1)
@@ -44,7 +54,6 @@ with st.form("easy_translation_form"):
     submitted = st.form_submit_button("🚀 Translate subtitles", type="primary", disabled=uploaded is None, use_container_width=True)
 
 if submitted and uploaded:
-    provider = "ollama" if provider_label.startswith("Ollama") else ("lmstudio" if provider_label == "LM Studio" else "openai-compatible")
     request = json.dumps({
         "source_language": "auto", "target_language": "fa", "provider": provider,
         "model": model, "base_url": base_url, "api_key": api_key,

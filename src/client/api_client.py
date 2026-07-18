@@ -25,6 +25,7 @@ class SubtitleAPIClient:
 
     def health(self): return self._request("GET", "/health").json()
     def providers(self): return self._request("GET", "/providers").json()
+    def discover(self): return self._request("GET", "/providers/discover").json()
     def job(self, job_id): return self._request("GET", f"/jobs/{job_id}").json()
     def cancel(self, job_id): return self._request("POST", f"/jobs/{job_id}/cancel").json()
     def resume(self, job_id): return self._request("POST", f"/jobs/{job_id}/resume").json()

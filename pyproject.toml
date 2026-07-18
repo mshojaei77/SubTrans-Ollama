@@ -19,6 +19,12 @@ dependencies = [
 Homepage = "https://github.com/mshojaei77/SubTrans-Ollama"
 Issues = "https://github.com/mshojaei77/SubTrans-Ollama/issues"
 
+[project.scripts]
+subtitle-translator = "launcher:main"
+
+[project.optional-dependencies]
+build = ["pyinstaller>=6.0"]
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"

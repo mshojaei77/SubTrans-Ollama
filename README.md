@@ -1,5 +1,9 @@
 # 🎬 SubTrans-Ollama 
 
+## Windows
+
+Download **Subtitle Translator.exe**, double-click it, drop in your subtitle, choose a language, and click **Translate**. No PowerShell, API, or Docker knowledge is needed.
+
 ## Simplest way to use it
 
 1. Install and start [Ollama](https://ollama.com/) and download a translation model.

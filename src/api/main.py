@@ -33,6 +33,23 @@ def providers():
     ]}
 
 
+@app.get("/providers/discover")
+def discover_providers():
+    candidates = [("ollama", "http://localhost:11434"), ("lmstudio", "http://localhost:1234/v1")]
+    for provider, base_url in candidates:
+        try:
+            url = f"{base_url}/api/tags" if provider == "ollama" else f"{base_url}/models"
+            response = httpx.get(url, timeout=2)
+            response.raise_for_status()
+            data = response.json()
+            models = [item.get("name", item.get("id")) for item in data.get("models", data.get("data", []))]
+            if models:
+                return {"available": True, "provider": provider, "base_url": base_url, "model": models[0], "models": models}
+        except Exception:
+            continue
+    return {"available": False, "message": "AI engine not found"}
+
+
 @app.post("/providers/test")
 def test_provider(request: dict):
     provider = str(request.get("provider", "")).lower()
