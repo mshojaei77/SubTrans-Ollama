@@ -4,12 +4,14 @@ from src.translation.context import ContextBuilder
 from src.glossary.service import GlossaryService
 from src.translation.validator import validate_glossary
 from src.memory.service import TranslationMemory
+from src.evaluation.judge import TranslationJudge
+from src.evaluation.database import EvaluationDatabase
 from src.translation.prompts import batch_messages
 from src.translation.validator import validate_translations
 
 
 class SubtitleTranslator:
-    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3, glossary_path=None, glossary=None, memory=None, memory_path=None):
+    def __init__(self, batch_size: int = 20, max_retries: int = 2, context_mode: str = "window", context_window: int = 3, glossary_path=None, glossary=None, memory=None, memory_path=None, judge=None, quality_mode: str = "disabled", evaluation_path=None):
         if batch_size < 1:
             raise ValueError("batch_size must be positive")
         self.batch_size = batch_size
@@ -20,6 +22,11 @@ class SubtitleTranslator:
         self.context_builder = ContextBuilder(context_window)
         self.glossary = glossary or GlossaryService(path=glossary_path) if glossary_path else (glossary or GlossaryService())
         self.memory = memory if memory is not None else (TranslationMemory(memory_path) if memory_path else None)
+        if quality_mode not in {"disabled", "fast", "standard", "strict"}:
+            raise ValueError("quality_mode must be disabled, fast, standard, or strict")
+        self.quality_mode = quality_mode
+        self.judge = judge
+        self.evaluations = EvaluationDatabase(evaluation_path) if evaluation_path else None
 
     def extract_units(self, document) -> list[TranslationUnit]:
         return [TranslationUnit(
@@ -59,6 +66,16 @@ class SubtitleTranslator:
         for start in range(0, len(pending), self.batch_size):
             batch = pending[start:start + self.batch_size]
             result = self._translate_batch(batch, provider)
+            if self.judge and self.quality_mode != "disabled":
+                for unit in batch:
+                    score = self.judge.evaluate(unit.text, result[unit.id], glossary=[e.target for e in (unit.glossary or [])])
+                    if self.evaluations:
+                        self.evaluations.save(unit.id, score)
+                    if not score.passed and self.quality_mode in {"standard", "strict"}:
+                        retry = [dict(role="system", content="Correct the translation using these review issues: " + "; ".join(score.issues)), dict(role="user", content=unit.text)]
+                        corrected = provider.chat(retry, temperature=0.1)
+                        if corrected.strip():
+                            result[unit.id] = corrected.strip()
             translations.update(result)
             if self.memory:
                 for unit in batch:
